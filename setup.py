@@ -10,5 +10,6 @@ setup(name='thecache',
       url='https://github.com/larsks/thecache',
       version=__version__,
       packages=find_packages(),
-      install_requires=requires
+      install_requires=requires,
+      test_suite='thecache.tests.test_cache',
       )
