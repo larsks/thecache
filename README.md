@@ -8,7 +8,7 @@ more feature-ful cache module.
 
 To get yourself a cache:
 
-    >>> from thecache import Cache
+    >>> from thecache.cache import Cache
     >>> mycache = Cache(__name__)
 
 To use the cache for small amounts of data (for memory efficient
