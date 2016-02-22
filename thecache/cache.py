@@ -8,14 +8,17 @@ import time
 LOG = logging.getLogger(__name__)
 
 DEFAULT_CACHE_DIR = os.environ.get('THE_CACHE_DIR',
-        os.path.join(os.environ.get('HOME', ''), '.cache', 'the-cache'))
+                                   os.path.join(os.environ.get('HOME', ''),
+                                                '.cache', 'the-cache'))
 DEFAULT_CACHE_LIFETIME = 300
 DEFAULT_CHUNK_SIZE = 8192
+
 
 def line_iterator(fd):
     with contextlib.closing(fd) as fd:
         for line in fd:
             yield line.replace('\n', '').replace('\r', '')
+
 
 def chunk_iterator(fd, chunksize=None):
     chunksize = chunksize or DEFAULT_CHUNK_SIZE
@@ -27,6 +30,7 @@ def chunk_iterator(fd, chunksize=None):
                 break
 
             yield data
+
 
 @contextlib.contextmanager
 def tempfile_writer(target):
@@ -43,6 +47,7 @@ def tempfile_writer(target):
     LOG.debug('rename %s -> %s', tmp, target)
     tmp.rename(target)
 
+
 class Cache (object):
     def __init__(self, appid, cachedir=None, lifetime=None):
         # sanitize the appid
@@ -51,22 +56,22 @@ class Cache (object):
         self.cachedir = pathlib.Path(cachedir or DEFAULT_CACHE_DIR)
         self.appid = appid
         self.lifetime = (
-                lifetime if lifetime is not None
-                else DEFAULT_CACHE_LIFETIME)
+            lifetime if lifetime is not None
+            else DEFAULT_CACHE_LIFETIME)
 
         self.create_cache_dirs()
 
         LOG.debug('initialized cache with lifetime = %d',
-                self.lifetime)
+                  self.lifetime)
 
     def get_app_cache(self):
         return pathlib.Path(self.cachedir, self.appid)
 
     def path(self, key):
         return pathlib.Path(
-                self.get_app_cache(),
-                key[:2],
-                key)
+            self.get_app_cache(),
+            key[:2],
+            key)
 
     def has(self, key):
         path = self.path(self.xform_key(key))
@@ -75,7 +80,7 @@ class Cache (object):
     def create_cache_dirs(self):
         LOG.debug('creating cache directories')
         if not self.cachedir.is_dir():
-           self.cachedir.mkdir(mode=0700)
+            self.cachedir.mkdir(mode=0700)
 
         appcache = self.get_app_cache()
         if not appcache.is_dir():
@@ -124,15 +129,16 @@ class Cache (object):
         with tempfile_writer(path) as fd:
             for data in content:
                 LOG.debug('writing chunk of %d bytes for %s',
-                        len(data), key)
+                          len(data), key)
                 fd.write(data)
         LOG.debug('%s stored in cache', key)
 
     def store_lines(self, key, content):
         '''like store_iter, but appends a newline to each chunk of
         content'''
-        return self.store_iter(key,
-                (data + '\n' for data in content))
+        return self.store_iter(
+            key,
+            (data + '\n' for data in content))
 
     def store_fd(self, key, content, chunksize=None):
         chunksize = chunksize or DEFAULT_CHUNK_SIZE
@@ -146,7 +152,6 @@ class Cache (object):
                     break
                 fd.write(data)
         LOG.debug('%s stored in cache', key)
-
 
     def store(self, key, content):
         key = self.xform_key(key)
@@ -187,7 +192,7 @@ class Cache (object):
         that reads chunksize bytes of data at a time.  The underlying
         file will be closed when all data has been read'''
         return chunk_iterator(self.load_fd(key, noexpire=noexpire),
-                chunksize=chunksize)
+                              chunksize=chunksize)
 
     def load(self, key, noexpire=None):
         '''Lookup an item in the cache and return the raw content of

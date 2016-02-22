@@ -5,9 +5,11 @@ import itertools
 sample_data_1 = 'sample\ndata\n'
 sample_data_2 = ''.join(chr(x) for x in range(254))
 
+
 def chunker(data, chunksize=2):
     return [''.join(x) for x in itertools.izip_longest(
             *[iter(data)]*chunksize)]
+
 
 class TestCache(unittest.TestCase):
     def setUp(self):
@@ -41,7 +43,7 @@ class TestCache(unittest.TestCase):
 
     def test_missing(self):
         with self.assertRaises(KeyError):
-            val = self.cache.load('testkey1')
+            self.cache.load('testkey1')
 
     def test_delete(self):
         self.cache.store('testkey1', sample_data_1)
