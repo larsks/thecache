@@ -89,6 +89,13 @@ that cannot be found in the cache.
   This will return an open file to the caller.  Is is the caller's job
   to close the file when it is no longer needed.
 
+## Contributing
+
+To report problems with this code, use the [issue tracker][].
+Changes may be submitted as GitHub pull requests.
+
+[issue tracker]: https://github.com/larsks/thecache/issues
+
 ## License
 
 thecache, a simple Python cache implementation  
