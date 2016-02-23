@@ -115,6 +115,17 @@ class TestCache(unittest.TestCase):
         cache = self.get_cache()
         cache.invalidate('key that does not exist')
 
+    def test_invalidate_all(self):
+        cache = self.get_cache()
+        cache.store('testkey1', sample_data_1)
+        cache.store('testkey2', sample_data_1)
+        cache.invalidate_all()
+
+        with self.assertRaises(KeyError):
+            cache.load('testkey1')
+        with self.assertRaises(KeyError):
+            cache.load('testkey2')
+
     def test_expire(self):
         cache = self.get_cache(lifetime=0)
         cache.store('testkey1', sample_data_1)
