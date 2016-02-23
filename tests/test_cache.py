@@ -22,93 +22,107 @@ def chunker(data, chunksize=2):
 
 
 class TestCache(unittest.TestCase):
+    def get_cache(self, lifetime=None):
+        return Cache(__name__,
+                     cachedir=self.cachedir,
+                     lifetime=lifetime)
+
     def setUp(self):
         self.cachedir = tempfile.mkdtemp()
-        self.cache = Cache(__name__,
-                           cachedir=self.cachedir)
-        self.cache.invalidate_all()
 
     def tearDown(self):
-        self.cache.invalidate_all()
         for dirpath, dirnames, filenames in os.walk(
                 self.cachedir, topdown=False):
+            for name in filenames:
+                os.unlink(os.path.join(dirpath, name))
             for name in dirnames:
                 os.rmdir(os.path.join(dirpath, name))
 
         os.rmdir(self.cachedir)
 
     def test_has(self):
-        self.cache.store('testkey1', sample_data_1)
-        self.assertTrue(self.cache.has('testkey1'))
+        cache = self.get_cache()
+        cache.store('testkey1', sample_data_1)
+        self.assertTrue(cache.has('testkey1'))
 
     def test_simple(self):
-        self.cache.store('testkey1', sample_data_1)
-        val = self.cache.load('testkey1')
+        cache = self.get_cache()
+        cache.store('testkey1', sample_data_1)
+        val = cache.load('testkey1')
         self.assertEqual(val, sample_data_1)
 
     def test_store_lines(self):
-        self.cache.store_lines('testkey1',
-                               sample_data_1.splitlines())
-        val = list(self.cache.load_lines('testkey1'))
+        cache = self.get_cache()
+        cache.store_lines('testkey1',
+                          sample_data_1.splitlines())
+        val = list(cache.load_lines('testkey1'))
         self.assertEqual(val, [b'sample', b'data'])
 
     def test_read_lines(self):
-        self.cache.store('testkey1', sample_data_1)
-        val = list(self.cache.load_lines('testkey1'))
+        cache = self.get_cache()
+        cache.store('testkey1', sample_data_1)
+        val = list(cache.load_lines('testkey1'))
         self.assertEqual(val, [b'sample', b'data'])
 
     def test_store_chunks(self):
-        self.cache.store_iter('testkey2', chunker(sample_data_2))
-        val = self.cache.load('testkey2')
+        cache = self.get_cache()
+        cache.store_iter('testkey2', chunker(sample_data_2))
+        val = cache.load('testkey2')
 
         self.assertEqual(sample_data_2, val)
 
     def test_read_chunks(self):
-        self.cache.store_iter('testkey2',
-                              chunker(sample_data_2))
+        cache = self.get_cache()
+        cache.store_iter('testkey2',
+                         chunker(sample_data_2))
         acc = []
-        for data in self.cache.load_iter('testkey2'):
+        for data in cache.load_iter('testkey2'):
             acc.append(data)
 
         val = b''.join(acc)
         self.assertEqual(sample_data_2, val)
 
     def test_missing(self):
+        cache = self.get_cache()
         with self.assertRaises(KeyError):
-            self.cache.load('testkey1')
+            cache.load('testkey1')
 
     def test_delete(self):
-        self.cache.store('testkey1', sample_data_1)
-        val = self.cache.load('testkey1')
+        cache = self.get_cache()
+        cache.store('testkey1', sample_data_1)
+        val = cache.load('testkey1')
         self.assertEqual(val, sample_data_1)
 
-        self.cache.invalidate('testkey1')
+        cache.invalidate('testkey1')
         with self.assertRaises(KeyError):
-            val = self.cache.load('testkey1')
+            val = cache.load('testkey1')
 
     def test_store_fd(self):
+        cache = self.get_cache()
         fd = BytesIO(sample_data_2)
-        self.cache.store_fd('testkey2', fd)
-        val = self.cache.load('testkey2')
+        cache.store_fd('testkey2', fd)
+        val = cache.load('testkey2')
         self.assertEqual(val, sample_data_2)
 
     def test_load_fd(self):
-        self.cache.store('testkey2', sample_data_2)
-        fd = self.cache.load_fd('testkey2')
+        cache = self.get_cache()
+        cache.store('testkey2', sample_data_2)
+        fd = cache.load_fd('testkey2')
         val = fd.read()
         self.assertEqual(val, sample_data_2)
 
     def test_invalidate_missing(self):
-        self.cache.invalidate('key that does not exist')
+        cache = self.get_cache()
+        cache.invalidate('key that does not exist')
 
     def test_expire(self):
-        self.cache = Cache(__name__, lifetime=0)
-        self.cache.store('testkey1', sample_data_1)
+        cache = self.get_cache(lifetime=0)
+        cache.store('testkey1', sample_data_1)
         with self.assertRaises(KeyError):
-            self.cache.load('testkey1')
+            cache.load('testkey1')
 
     def test_noexpire(self):
-        self.cache = Cache(__name__, lifetime=0)
-        self.cache.store('testkey1', sample_data_1)
-        val = self.cache.load('testkey1', noexpire=True)
+        cache = self.get_cache(lifetime=0)
+        cache.store('testkey1', sample_data_1)
+        val = cache.load('testkey1', noexpire=True)
         self.assertEqual(val, sample_data_1)
