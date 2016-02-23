@@ -22,7 +22,7 @@ class TestCache(unittest.TestCase):
     def setUp(self):
         self.cachedir = tempfile.mkdtemp()
         self.cache = Cache(__name__,
-                           cachedir = self.cachedir)
+                           cachedir=self.cachedir)
         self.cache.invalidate_all()
 
     def tearDown(self):
