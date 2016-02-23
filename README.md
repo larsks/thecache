@@ -1,3 +1,6 @@
+[![travis-ci.org](https://travis-ci.org/larsks/thecache.svg)](https://travis-ci.org/larsks/thecache)
+[![codecov.io](https://codecov.io/github/larsks/thecache/coverage.svg?branch=master)](https://codecov.io/github/larsks/thecache?branch=master)
+
 This is a simple file-based cache implementation that is meant for
 simple cases where you want to cache some data (maybe you want to
 avoid hammering an API server with repeated requests) but you don't
