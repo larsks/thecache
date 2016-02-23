@@ -96,6 +96,13 @@ Changes may be submitted as GitHub pull requests.
 
 [issue tracker]: https://github.com/larsks/thecache/issues
 
+Commits are verified using [travis-ci.org][travis], which
+automatically runs `tox` after any pushes or pull requests.  You
+should run `tox` locally to verify any changes before submitting them
+to GitHub.
+
+[travis]: http://travis-ci.org/
+
 ## License
 
 thecache, a simple Python cache implementation  
