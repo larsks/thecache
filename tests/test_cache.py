@@ -1,21 +1,24 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import os
-import unittest
-import itertools
+import six
 import tempfile
+import unittest
 
 from io import BytesIO
 
 from thecache.cache import Cache
 
-from io import BytesIO
-
-sample_data_1 = 'sample\ndata\n'
-sample_data_2 = ''.join(chr(x) for x in range(254))
+sample_data_1 = six.b('sample\ndata\n')
+sample_data_2 = b''.join(six.int2byte(x) for x in range(254))
 
 
 def chunker(data, chunksize=2):
-    return [''.join(x) for x in itertools.izip_longest(
-            *[iter(data)]*chunksize)]
+    return (data[i:i+chunksize]
+            for i in range(0, len(data), chunksize))
 
 
 class TestCache(unittest.TestCase):
@@ -38,13 +41,6 @@ class TestCache(unittest.TestCase):
         self.cache.store('testkey1', sample_data_1)
         self.assertTrue(self.cache.has('testkey1'))
 
-    def tearDown(self):
-        self.cache.invalidate_all()
-
-    def test_has(self):
-        self.cache.store('testkey1', sample_data_1)
-        self.assertTrue(self.cache.has('testkey1'))
-
     def test_simple(self):
         self.cache.store('testkey1', sample_data_1)
         val = self.cache.load('testkey1')
@@ -54,12 +50,12 @@ class TestCache(unittest.TestCase):
         self.cache.store_lines('testkey1',
                                sample_data_1.splitlines())
         val = list(self.cache.load_lines('testkey1'))
-        self.assertEqual(val, ['sample', 'data'])
+        self.assertEqual(val, [b'sample', b'data'])
 
     def test_read_lines(self):
         self.cache.store('testkey1', sample_data_1)
         val = list(self.cache.load_lines('testkey1'))
-        self.assertEqual(val, ['sample', 'data'])
+        self.assertEqual(val, [b'sample', b'data'])
 
     def test_store_chunks(self):
         self.cache.store_iter('testkey2', chunker(sample_data_2))
@@ -68,12 +64,13 @@ class TestCache(unittest.TestCase):
         self.assertEqual(sample_data_2, val)
 
     def test_read_chunks(self):
-        self.cache.store_iter('testkey2', sample_data_2)
+        self.cache.store_iter('testkey2',
+                              chunker(sample_data_2))
         acc = []
         for data in self.cache.load_iter('testkey2'):
             acc.append(data)
 
-        val = ''.join(acc)
+        val = b''.join(acc)
         self.assertEqual(sample_data_2, val)
 
     def test_missing(self):

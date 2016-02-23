@@ -1,9 +1,18 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import contextlib
 import hashlib
 import logging
 import os
-import pathlib2 as pathlib
 import time
+
+try:
+    import pathlib2 as pathlib
+except ImportError:
+    import pathlib
 
 LOG = logging.getLogger(__name__)
 
@@ -18,7 +27,7 @@ DEFAULT_CHUNK_SIZE = 8192
 def line_iterator(fd):
     with contextlib.closing(fd) as fd:
         for line in fd:
-            yield line.replace('\n', '').replace('\r', '')
+            yield line.replace(b'\n', b'').replace(b'\r', b'')
 
 
 def chunk_iterator(fd, chunksize=None):
@@ -81,23 +90,23 @@ class Cache (object):
     def create_cache_dirs(self):
         LOG.debug('creating cache directories')
         if not self.cachedir.is_dir():
-            self.cachedir.mkdir(mode=0700)
+            self.cachedir.mkdir(mode=0o0700)
 
         appcache = self.get_app_cache()
         if not appcache.is_dir():
-            appcache.mkdir(mode=0700)
+            appcache.mkdir(mode=0o0700)
 
         for prefix in range(256):
             prefixdir = pathlib.Path(appcache, '{:02x}'.format(prefix))
             if not prefixdir.is_dir():
-                prefixdir.mkdir(mode=0700)
+                prefixdir.mkdir(mode=0o0700)
 
     def xform_key(self, key):
         '''we transform cache keys by taking their sha1 hash so that
         we don't need to worry about cache keys containing invalid
         characters'''
 
-        newkey = hashlib.sha1(key)
+        newkey = hashlib.sha1(key.encode('utf-8'))
         return newkey.hexdigest()
 
     def invalidate(self, key):
@@ -139,7 +148,7 @@ class Cache (object):
         content'''
         return self.store_iter(
             key,
-            (data + '\n' for data in content))
+            (data + '\n'.encode('utf-8') for data in content))
 
     def store_fd(self, key, content, chunksize=None):
         chunksize = chunksize or DEFAULT_CHUNK_SIZE
