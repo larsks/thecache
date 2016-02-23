@@ -1,0 +1,8 @@
+.tox/
+.venv/
+covhtml/
+dist/
+*.egg-info/
+.coverage
+.eggs/
+.cache/
