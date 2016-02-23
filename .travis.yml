@@ -1,8 +1,11 @@
 language: python
-python:
-  - "3.4"
-  - "2.7"
+matrix:
+  include:
+    - python: "2.7"
+      env: TEST_SUITE=py27
+    - python: "3.4"
+      env: TEST_SUITE=py34
 install:
   - "pip install -r requirements.txt"
   - "pip install -U -r test-requirements.txt"
-script: tox
+script: tox -e $TEST_SUITE
