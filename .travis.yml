@@ -10,5 +10,7 @@ matrix:
 install:
   - "pip install -r requirements.txt"
   - "pip install -U -r test-requirements.txt"
+after_success:
+  - codecov
 script: |
   tox -e $TEST_SUITE
