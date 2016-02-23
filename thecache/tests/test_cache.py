@@ -1,6 +1,11 @@
-from thecache.cache import Cache
+import os
 import unittest
 import itertools
+import tempfile
+
+from io import BytesIO
+
+from thecache.cache import Cache
 
 from io import BytesIO
 
@@ -15,8 +20,23 @@ def chunker(data, chunksize=2):
 
 class TestCache(unittest.TestCase):
     def setUp(self):
-        self.cache = Cache(__name__)
+        self.cachedir = tempfile.mkdtemp()
+        self.cache = Cache(__name__,
+                           cachedir = self.cachedir)
         self.cache.invalidate_all()
+
+    def tearDown(self):
+        self.cache.invalidate_all()
+        for dirpath, dirnames, filenames in os.walk(
+                self.cachedir, topdown=False):
+            for name in dirnames:
+                os.rmdir(os.path.join(dirpath, name))
+
+        os.rmdir(self.cachedir)
+
+    def test_has(self):
+        self.cache.store('testkey1', sample_data_1)
+        self.assertTrue(self.cache.has('testkey1'))
 
     def tearDown(self):
         self.cache.invalidate_all()
@@ -89,3 +109,9 @@ class TestCache(unittest.TestCase):
         self.cache.store('testkey1', sample_data_1)
         with self.assertRaises(KeyError):
             self.cache.load('testkey1')
+
+    def test_noexpire(self):
+        self.cache = Cache(__name__, lifetime=0)
+        self.cache.store('testkey1', sample_data_1)
+        val = self.cache.load('testkey1', noexpire=True)
+        self.assertEqual(val, sample_data_1)
