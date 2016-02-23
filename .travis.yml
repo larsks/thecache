@@ -13,4 +13,4 @@ install:
 after_success:
   - codecov
 script: |
-  tox -e $TEST_SUITE
+  tox -e $TEST_SUITE -- -v
