@@ -7,9 +7,10 @@ import time
 
 LOG = logging.getLogger(__name__)
 
-DEFAULT_CACHE_DIR = os.environ.get('THE_CACHE_DIR',
-                                   os.path.join(os.environ.get('HOME', ''),
-                                                '.cache', 'the-cache'))
+DEFAULT_CACHE_DIR = os.environ.get(
+    'THE_CACHE_DIR', os.path.join(os.environ.get('HOME', ''),
+                                  '.cache', 'the-cache'))
+
 DEFAULT_CACHE_LIFETIME = 300
 DEFAULT_CHUNK_SIZE = 8192
 
@@ -123,8 +124,8 @@ class Cache (object):
     def store_iter(self, key, content):
         '''stores content in the cache by iterating over
         content'''
-        key = self.xform_key(key)
-        path = self.path(key)
+        cachekey = self.xform_key(key)
+        path = self.path(cachekey)
 
         with tempfile_writer(path) as fd:
             for data in content:
@@ -142,8 +143,8 @@ class Cache (object):
 
     def store_fd(self, key, content, chunksize=None):
         chunksize = chunksize or DEFAULT_CHUNK_SIZE
-        key = self.xform_key(key)
-        path = self.path(key)
+        cachekey = self.xform_key(key)
+        path = self.path(cachekey)
 
         with tempfile_writer(path) as fd:
             while True:
@@ -154,8 +155,8 @@ class Cache (object):
         LOG.debug('%s stored in cache', key)
 
     def store(self, key, content):
-        key = self.xform_key(key)
-        path = self.path(key)
+        cachekey = self.xform_key(key)
+        path = self.path(cachekey)
 
         with tempfile_writer(path) as fd:
             fd.write(content)
@@ -166,12 +167,13 @@ class Cache (object):
         descriptor for the object.  It is the caller's responsibility
         to close the file descriptor.'''
 
-        key = self.xform_key(key)
-        path = self.path(key)
+        cachekey = self.xform_key(key)
+        path = self.path(cachekey)
 
         try:
             stat = path.stat()
             if not noexpire and stat.st_mtime < time.time() - self.lifetime:
+                LOG.debug('%s has expired', key)
                 path.unlink()
                 raise KeyError(key)
 

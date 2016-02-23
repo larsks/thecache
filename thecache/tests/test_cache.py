@@ -2,6 +2,8 @@ from thecache.cache import Cache
 import unittest
 import itertools
 
+from io import BytesIO
+
 sample_data_1 = 'sample\ndata\n'
 sample_data_2 = ''.join(chr(x) for x in range(254))
 
@@ -16,12 +18,25 @@ class TestCache(unittest.TestCase):
         self.cache = Cache(__name__)
         self.cache.invalidate_all()
 
+    def tearDown(self):
+        self.cache.invalidate_all()
+
+    def test_has(self):
+        self.cache.store('testkey1', sample_data_1)
+        self.assertTrue(self.cache.has('testkey1'))
+
     def test_simple(self):
         self.cache.store('testkey1', sample_data_1)
         val = self.cache.load('testkey1')
         self.assertEqual(val, sample_data_1)
 
-    def test_lines(self):
+    def test_store_lines(self):
+        self.cache.store_lines('testkey1',
+                               sample_data_1.splitlines())
+        val = list(self.cache.load_lines('testkey1'))
+        self.assertEqual(val, ['sample', 'data'])
+
+    def test_read_lines(self):
         self.cache.store('testkey1', sample_data_1)
         val = list(self.cache.load_lines('testkey1'))
         self.assertEqual(val, ['sample', 'data'])
@@ -53,3 +68,24 @@ class TestCache(unittest.TestCase):
         self.cache.invalidate('testkey1')
         with self.assertRaises(KeyError):
             val = self.cache.load('testkey1')
+
+    def test_store_fd(self):
+        fd = BytesIO(sample_data_2)
+        self.cache.store_fd('testkey2', fd)
+        val = self.cache.load('testkey2')
+        self.assertEqual(val, sample_data_2)
+
+    def test_load_fd(self):
+        self.cache.store('testkey2', sample_data_2)
+        fd = self.cache.load_fd('testkey2')
+        val = fd.read()
+        self.assertEqual(val, sample_data_2)
+
+    def test_invalidate_missing(self):
+        self.cache.invalidate('key that does not exist')
+
+    def test_expire(self):
+        self.cache = Cache(__name__, lifetime=0)
+        self.cache.store('testkey1', sample_data_1)
+        with self.assertRaises(KeyError):
+            self.cache.load('testkey1')
